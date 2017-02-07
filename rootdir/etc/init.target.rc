@@ -29,7 +29,7 @@ import init.target.power.rc
 
 on early-init
     #set non-stand-charger can used
-    write /sys/module/phy_msm_usb/parameters/floated_charger_enable Y
+    write /sys/module/phy_msm_usb/parameters/floated_charger_enable N
 
 on boot
     # Torch
@@ -96,10 +96,10 @@ on boot
     write /sys/module/process_reclaim/parameters/swap_opt_eff 30
 
     write /sys/block/mmcblk0/queue/add_random 0
-    write /sys/block/mmcblk0/bdi/read_ahead_kb 128
+    write /sys/block/mmcblk0/bdi/read_ahead_kb 0
 
 # Adaptive LMK
-    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 1
+    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 0
     write /sys/module/lowmemorykiller/parameters/vmpressure_file_min 53059
 	
 on post-fs-data
@@ -117,7 +117,6 @@ on property:service.bootanim.exit=1
 service calibacc /system/bin/accelcal
     class main
     oneshot
-    disabled
 
 on property:sys.sensors.acc=*
     start calibacc
@@ -133,7 +132,7 @@ service vm_bms /system/bin/vm_bms
 
 on charger
    wait /dev/block/bootdevice/by-name/system
-   mount ext4 /dev/block/bootdevice/by-name/system /system ro barrier=1
+   mount ext4 /dev/block/bootdevice/by-name/system /system rw barrier=1
    chown root system /sys/class/power_supply/bms/current_now
    chown root system /sys/class/power_supply/bms/voltage_ocv
    chmod 0664 /sys/class/power_supply/bms/current_now
@@ -150,14 +149,14 @@ on charger
    write /sys/module/lpm_levels/system/cpu1/pc/idle_enabled Y
    write /sys/module/lpm_levels/system/cpu2/pc/idle_enabled Y
    write /sys/module/lpm_levels/system/cpu3/pc/idle_enabled Y
-   write /sys/module/lpm_levels/system/cpu0/pc/suspend_enabled N
+   write /sys/module/lpm_levels/system/cpu0/pc/suspend_enabled Y
    write /sys/module/lpm_levels/system/cpu1/pc/suspend_enabled Y
    write /sys/module/lpm_levels/system/cpu2/pc/suspend_enabled Y
    write /sys/module/lpm_levels/system/cpu3/pc/suspend_enabled Y
    write /sys/module/lpm_levels/system/l2-pc/idle_enabled Y
    write /sys/module/lpm_levels/system/l2-cache-active/idle_enabled Y
    write /sys/module/lpm_levels/system/l2-pc/suspend_enabled Y
-   write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ondemand
+   write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor powersave
    start vm_bms
 
 service sensord /system/bin/sensord
@@ -170,7 +169,6 @@ on property:init.svc.zygote=restarting
 service calibacc /system/bin/accelcal
     class main
     oneshot
-    disabled
 
 on property:sys.sensors.acc=*
     start calibacc
