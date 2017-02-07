@@ -3,7 +3,7 @@ on early-init
 on enable-target-low-power
 
     # Adaptive LMK
-    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 1
+    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 0
     write /sys/module/lowmemorykiller/parameters/vmpressure_file_min 53059
 
     write /sys/module/lpm_levels/parameters/sleep_disabled 0
@@ -18,22 +18,17 @@ on enable-target-low-power
     write /proc/sys/kernel/sched_mostly_idle_nr_run 3
 
     # disable thermal core_control to update scaling_min_freq
-    write /sys/module/msm_thermal/core_control/enabled 0
+    write /sys/module/msm_thermal/core_control/enabled 1
     write /sys/devices/system/cpu/cpu0/online 1
     write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 400000
     # enable thermal core_control now
     write /sys/module/msm_thermal/core_control/enabled 1
 
-    write /sys/module/cpu_boost/parameters/boost_ms 20
-    write /sys/module/cpu_boost/parameters/sync_threshold 998400
-    write /sys/module/cpu_boost/parameters/input_boost_freq 1094400
-    write /sys/module/cpu_boost/parameters/input_boost_ms 40
-
     write /sys/devices/system/cpu/cpu1/online 1
     write /sys/devices/system/cpu/cpu2/online 1
     write /sys/devices/system/cpu/cpu3/online 1
     write /sys/module/msm_thermal/core_control/enabled 0
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor "interactive"
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor "powersave"
     write /sys/module/msm_thermal/core_control/enabled 1
 
     write /sys/devices/system/cpu/cpufreq/interactive/timer_rate 20000
@@ -46,13 +41,13 @@ on enable-target-low-power
     write /sys/devices/system/cpu/cpufreq/interactive/align_windows 1
 
     # Configure foreground and background cpuset
-    write /dev/cpuset/foreground/cpus 0-3
-    write /dev/cpuset/foreground/boost/cpus 0-1
+    write /dev/cpuset/foreground/cpus 0
+    write /dev/cpuset/foreground/boost/cpus 0
     write /dev/cpuset/background/cpus 0
-    write /dev/cpuset/system-background/cpus 2-3
+    write /dev/cpuset/system-background/cpus 0
 
     write /sys/class/devfreq/1c00000.qcom,kgsl-3d0/governor "msm-adreno-tz"
-    write /sys/class/devfreq/qcom,cpubw.30/governor "cpufreq"
+    write /sys/class/devfreq/qcom,cpubw.30/governor "powersave"
 
 on charger
     write /sys/module/lpm_levels/parameters/sleep_disabled 0
@@ -72,8 +67,8 @@ on boot
 on property:init.svc.recovery=running
     trigger enable-target-low-power
 
-service mpdecision /system/bin/mpdecision --avg_comp
-   class late_start
+service mpdecision /system/bin/mpdecision --nosleep --avg_comp
+   class main
    user root
    group system
 
